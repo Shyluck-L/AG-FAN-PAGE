@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ariana Grande Mini Fan App</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<style>
+/* =========================================
+   1. Global Imports & Variable
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@400;600;700&family=Sacramento&display=swap');
+
+:root {
+    /* 通用色系 */
+    --primary-pink: #EC4899;
+    --primary-pink-hover: #db2777;
+    --text-dark: #1F2937;
+    --text-gray: #4B5563;
+    --bg-light: #f7f7f7;
+    
+    /* 光暈顏色預設 */
+    --glow-color: rgba(236, 72, 153, 0.15); /* 淺粉色 */
+
+    /* Table 3 (Records) 專用變數 */
+    --accent-gold: #C69C6D;
+    --accent-brown: #8D6E63;
+    --modal-overlay-bg: rgba(0, 0, 0, 0.4);
+
+    /* Album Page 專用變數 */
+    --alb-marble-light: #F7F7F7;
+    --alb-cream-white: #FFFFFF;
+    --alb-dark-gray: #333333;
+    --alb-subtle-gray: #888888;
+    --alb-silver: #A9A9A9;
+    --alb-light-gold: #C7A45E;
+    --alb-copper: #B87333;
+    --alb-wine-red: #720026;
+}
+
+::selection {
+    background: var(--color-dark-gray); /* 深灰背景 */
+    color: var(--color-pink-200);       /* 淺粉色文字 */
+}
+/* =========================================
+   2. Base Styles & Utilities (取代 Tailwind)
+   ========================================= */
+body {
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-light);
+    line-height: 1.6;
+    position: relative; /* 為了讓 fixed 的光暈定位參考 */
+}
+
+/* 背景模糊光暈 (全局通用) */
+.ambient-glow {
+    position: fixed;
+    width: 60vw;
+    height: 60vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--glow-color) 0%, rgba(255,255,255,0) 70%);
+    top: -20%;
+    left: -20%;
+    z-index: -1; 
+    filter: blur(80px);
+    animation: float 10s infinite ease-in-out;
+    pointer-events: none; /* 讓點擊穿透 */
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(50px, 30px); }
+}
+/* 頁面特定背景設定 */
+
+#message-area { overflow-x: hidden; }
+#home-area { background-color: #fdf2f8; }
+
+/* 通用容器 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* 通用工具類 (Utility Classes) */
+.text-center { text-align: center; }
+
+.mt-8 { margin-top: 2rem; }
+/* 按鈕樣式 (取代 Tailwind bg-pink-500 等) */
+
+/* =========================================
+   3. Navigation (Shared & Unified)
+   ========================================= */
+.header {
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 0.75rem 0;
+    transition: transform 0.3s ease-in-out;
+}
+.header.header-hidden { transform: translateY(-100%); }
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* === 統一品牌標題樣式 (手寫風) === */
+.header-brand {
+    font-family: 'Sacramento', cursive; /* 手寫字體 */
+    font-size: 2.5rem; /* 加大字級 */
+    font-weight: 500;
+    color: var(--primary-pink); /* 統一使用粉色 */
+    margin: 0;
+    line-height: 1;
+    cursor: default;
+}
+
+/* 備用標題樣式 (若不使用手寫風) */
+.header-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary-pink);
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+/* [已移除] Album 頁面特殊覆蓋 - 現在所有頁面導航一致 */
+
+.nav-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    font-size: 1rem;
+    font-weight: 500;
+    gap: 1.5rem;
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+    position: relative;
+    color: #374151; /* 統一深灰色 */
+    text-decoration: none;
+    padding: 0.25rem 0;
+}
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 50%;
+    background-color: #FF69B4; /* 統一粉色底線 */
+    transition: width 0.3s ease-out, left 0.3s ease-out;
+}
+.nav-link:hover { color: #ec4899; }
+.nav-link:hover::after, .nav-link.active::after { width: 100%; left: 0; }
+.nav-link.active { color: #ec4899; font-weight: 800; }
+
+
+/* =========================================
+   4. Message Board (Refactored)
+   ========================================= */
+.message-section { padding: 3rem 0; min-height: 0; background-color: transparent; position: relative; z-index: 1; }
+.message-header { text-align: center; margin-bottom: 2rem; }
+.message-title { font-size: 2.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem; }
+.message-subtitle { color: #6b7280; }
+
+#message-board-container {
+    width: 100%; max-width: 1000px; height: 520px; margin: 0 auto; position: relative;
+    border-radius: 20px; overflow: hidden; background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    box-shadow: 0 0 30px rgba(224, 195, 252, 0.6), inset 0 0 50px rgba(255, 255, 255, 0.5);
+    border: 4px solid rgba(255, 255, 255, 0.4);
+}
+.floating-message {
+    position: absolute; background: rgba(255, 255, 255, 0.35); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.6); padding: 12px 20px; border-radius: 30px;
+    color: #2d3748; font-weight: 500; cursor: pointer; transition: transform 0.3s ease, background 0.3s;
+    user-select: none; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 10;
+}
+.floating-message:hover { transform: scale(1.15); background: rgba(255, 255, 255, 0.8); z-index: 50; border-color: #ec4899; }
+.floating-message .user-name { display: block; font-size: 0.75rem; color: #ec4899; font-weight: 800; text-transform: uppercase; }
+.floating-message .msg-content { font-family: 'Sacramento', serif; font-size: 1.6rem; line-height: 1.2; font-weight: 600; }
+
+#control-panel {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 800px;
+    background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); border-radius: 20px; padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.8); z-index: 100;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
+}
+#control-panel.hidden-panel { transform: translateX(-50%) translateY(150%); opacity: 0; }
+.message-form { display: flex; gap: 15px; align-items: center; width: 100%; }
+@media (max-width: 768px) { .message-form { flex-direction: column; } }
+.custom-input {
+    background: rgba(255, 255, 255, 0.5); border: 2px solid transparent; border-radius: 10px;
+    padding: 10px 15px; outline: none; transition: all 0.3s; font-size: 1rem; width: 100%;
+}
+.custom-input:focus { background: white; border-color: #a78bfa; box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.2); }
+.btn-send {
+    background: linear-gradient(45deg, #ff69b4, #a78bfa); color: white; border: none; padding: 12px 24px;
+    border-radius: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; min-width: 100px;
+}
+.btn-send:hover { transform: translateY(-2px); box-shadow: 0 0 15px rgba(236, 72, 153, 0.7); }
+
+#toggle-view {
+    position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px); padding: 10px; border-radius: 50%; cursor: pointer; z-index: 100; border: none;
+}
+.bg-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.6; animation: blob-bounce 10s infinite alternate; }
+
+/* Message Modal */
+#msg-modal-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s;
+}
+#msg-modal-overlay.active { display: flex; opacity: 1; }
+#message-area .msg-modal-content {
+    background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; width: 80%; max-width: 500px;
+    text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); transform: scale(0.8); transition: transform 0.3s;
+}
+#msg-modal-overlay.active .msg-modal-content { transform: scale(1); }
+#message-area .modal-user { font-size: 1rem; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: block; }
+#message-area .modal-text { font-family: 'Sacramento', serif; font-size: 3rem; color: #333; line-height: 1.2; margin-bottom: 30px; }
+#message-area .close-modal-btn { background: #e2e8f0; color: #64748b; border: none; padding: 10px 30px; border-radius: 50px; cursor: pointer; }
+ .footer {
+    /* 變回粉色漸層 */
+    background: linear-gradient(135deg, var(--color-pink-800) 0%, var(--color-gray-900) 100%);
+    color: var(--color-cream-white); 
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+    text-align: center;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/*==== Index Page Styles ========================================== */
+    #home-area {
+        font-family: 'Inter', sans-serif;
+        background-color: #fdf2f8;
+        color: #1F2937;
+        line-height: 1.8;
+        margin: 0;
+    }
+
+    :is(#home-area,#footer-area) .page-section {
+        margin: 3rem auto;
+    }
+
+    :is(#home-area,#footer-area) .container {
+        max-width: 1200px;
+        margin: 0 0;
+        padding: 0 0rem;
+        display: inline;
+    }
+
+/* ====== Hero 區 ====== */
+:is(#home-area,#footer-area) .hero {
+    position: relative;
+    min-height: 450px;
+    padding: 0;
+    margin: 0;
+    box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* 背景輪播 */
+:is(#home-area,#footer-area) .tour-gallery-container-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    filter: grayscale(30%) brightness(0.85);
+}
+:is(#home-area,#footer-area) .tour-gallery-strip {
+    width: 400%;
+    height: 100%;
+    display: flex;
+    animation: slide 15s infinite linear;
+}
+@keyframes slide {
+    0%   { transform: translateX(0%); }
+    100% { transform: translateX(-75%); }
+}
+:is(#home-area,#footer-area) .tour-gallery-strip img {
+    width: 25%;
+    height: 100%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+:is(#home-area,#footer-area) .hero-mask {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+:is(#home-area,#footer-area) .hero-content {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    padding: 3.5rem 2rem;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .hero-content {
+        padding: 2.5rem 1.5rem;
+    }
+}
+
+:is(#home-area,#footer-area) .hero-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 5rem;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .hero-inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+:is(#home-area,#footer-area) .hero-text {
+    max-width: 50%;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .hero-text {
+        max-width: 100%;
+    }
+}
+
+:is(#home-area,#footer-area) .hero-title {
+    font-size: 4.5rem;
+    font-weight: 900;
+    line-height: 1.2;
+    color: #FFFFFF;
+    text-shadow: 2px 2px 4px rgba(209, 72, 177, 0.5);
+    margin: 0;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .hero-title {
+        font-size: 3rem;
+    }
+}
+
+:is(#home-area,#footer-area) .hero-title2 {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 21px;
+    color: #FFFFFF;
+    text-shadow: 2px 2px 4px rgba(209, 72, 177, 0.5);
+    margin: 1.5rem 0 0.5rem;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .hero-title2 {
+        font-size: 1.6rem;
+        letter-spacing: 10px;
+    }
+}
+
+:is(#home-area,#footer-area) .hero-subtitle {
+    font-size: 1.3rem;
+    color: #ffcae7;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5);
+    margin: 0 0 1.5rem;
+}
+
+:is(#home-area,#footer-area) .hero-button {
+    display: inline-block;
+    font-weight: 700;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    box-shadow:
+        0 10px 15px -3px rgba(0,0,0,0.1),
+        0 4px 6px -4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    margin-top: 0.25rem;
+}
+:is(#home-area,#footer-area) .hero-button:hover {
+    transform: scale(1.05);
+}
+:is(#home-area,#footer-area) .btn-bio {
+    background-color: #EC4899;
+    color: #FFFFFF;
+}
+:is(#home-area,#footer-area) .btn-bio:hover {
+    background-color: #DB2777;
+}
+:is(#home-area,#footer-area) .btn-albums {
+    background-color: #BE185D;
+    color: #FFFFFF;
+    margin-left: 1rem;
+}
+:is(#home-area,#footer-area) .btn-albums:hover {
+    background-color: #9D174D;
+}
+
+/* 音樂控制 */
+:is(#home-area,#footer-area) .music-control-wrapper {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+    gap: 0.5rem;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .music-control-wrapper {
+        justify-content: center;
+    }
+}
+
+:is(#home-area,#footer-area) .music-control-button {
+    background: none;
+    border: none;
+    color: #FFFFFF;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+:is(#home-area,#footer-area) .music-control-button:hover {
+    transform: scale(1.2);
+}
+:is(#home-area,#footer-area) .music-status-text {
+    color: white;
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 2px black;
+}
+
+/* Hero 頭像 */
+:is(#home-area,#footer-area) .hero-image-wrapper {
+    width: 30%;
+    max-width: 260px;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .hero-image-wrapper {
+        width: 60%;
+        max-width: 260px;
+        margin: 1rem auto 0;
+    }
+}
+
+:is(#home-area,#footer-area) .hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #FFFFFF;
+    box-shadow:
+        0 0 0 4px #FFFFFF,
+        0 0 20px rgba(255, 255, 255, 0.5);
+    transition: all 0.2s ease-in-out;
+}
+@keyframes subtleBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-10px) scale(1.03); }
+}
+:is(#home-area,#footer-area) .hero-image:hover {
+    animation: subtleBounce 0.8s infinite alternate ease-in-out;
+    box-shadow:
+        0 0 0 8px #FBCFE8,
+        0 0 30px #EC4899;
+}
+
+/* ====== 區塊標題 ====== */
+:is(#home-area,#footer-area) .section-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #1F2937;
+    border-bottom: 4px solid #EC4899;
+    padding-bottom: 0.5rem;
+    padding-left: 1rem;
+    margin: 0;
+}
+
+/* ====== 人物簡介 ====== */
+:is(#home-area,#footer-area) .bio-section-inner {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    margin: 3.5rem;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .bio-section-inner {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+:is(#home-area,#footer-area) .bio-image-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+:is(#home-area,#footer-area) .bio-image {
+    width: 16rem;
+    height: 20rem;
+    object-fit: cover;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 4px solid #FBCFE8;
+    transition: all 0.5s ease;
+}
+:is(#home-area,#footer-area) .bio-image:hover {
+    transform: rotate(2deg);
+}
+
+:is(#home-area,#footer-area) .bio-card {
+    background-color: #FFFFFF;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    border: 1px solid #F3F4F6;
+}
+@media (max-width: 768px) {
+    :is(#home-area,#footer-area) .bio-card {
+        padding: 1.5rem;
+    }
+}
+
+:is(#home-area,#footer-area) .bio-card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #DB2777;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+:is(#home-area,#footer-area) .bio-card p {
+    color: #374151;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+:is(#home-area,#footer-area) .bio-card .highlight {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #EC4899;
+}
+
+/* ====== Footer ====== */
+:is(#home-area,#footer-area) .footer-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    height: 2.8rem;
+    color: #ffe4e9;
+    text-shadow: 0 0 5px var(--color-pink-500);
+}
+:is(#home-area,#footer-area) .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+:is(#home-area,#footer-area) .social-link {
+    font-size: 2.5rem;
+    color: var(--color-pink-200);
+    transition: all 0.3s ease;
+}
+:is(#home-area,#footer-area) .social-link:hover {
+    color:  var(--color-cream-white);
+    transform: scale(1.4) rotate(5deg);
+    text-shadow: 0 0 8px var(--color-pink-500);
+}
+
+/*==== Album Page Styles ========================================== */
+
+:root {
+    --color-marble-light: #F7F7F7; 
+    --color-cream-white: #FFFFFF; 
+    --color-dark-gray: #333333; 
+    --color-subtle-gray: #888888; 
+
+    --color-silver: #A9A9A9;
+    --color-light-gold: #C7A45E; 
+    --color-copper: #B87333; 
+    --color-wine-red: #720026; 
+
+    --color-pink-500: #EC4899; 
+    --color-pink-800: #9D174D; 
+    --color-pink-200: #FBCFE8;
+    --color-gray-900: #111827; 
+}
+
+#album-area {
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--alb-marble-light);
+    color: var(--alb-dark-gray);
+    line-height: 1.7;
+    margin: 0;
+    padding-top: 0;
+    position: relative;
+    overflow-x: hidden;
+}
+
+#album-area::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+#album-area .container {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+#album-area .page-section {
+    margin-top: 4rem;
+    margin-bottom: 4rem;
+}
+
+#album-area .section-title {
+    font-size: 2.25rem;
+    font-weight: 900;
+    color: var(--color-dark-gray);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+}
+#album-area .section-title.center {
+    text-align: center;
+    display: block;
+}
+#album-area .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background-color: var(--color-light-gold); 
+    opacity: 1;
+    z-index: -1;
+    border-radius: 2px;
+}
+#album-area .section-subtitle {
+    color: var(--color-subtle-gray);
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    text-align: center;
+}
+
+
+#album-area .albums-section {
+    padding: 3.5rem 1.5rem 4.5rem;
+    background-color: var(--color-cream-white);
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--color-silver);
+}
+
+
+#album-area .album-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); 
+    gap: 3rem; 
+    row-gap: 4rem; 
+    justify-items: center;
+}
+
+
+#album-area .album-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--color-marble-light); 
+    padding: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08), 0 0 0 1px var(--color-silver); 
+    text-align: center;
+    width: 95%;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+#album-area .album-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--color-light-gold); 
+    background-color: #FAFAFA;
+}
+
+/* Spotify Iframe 容器 */
+#album-area .spotify-iframe-container {
+    width: 100%; 
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); 
+    border: 2px solid var(--color-silver);
+}
+#album-area .spotify-iframe-container iframe {
+    width: 100%;
+    height: 152px;
+    border: none;
+}
+
+/* 專輯標題和年份 - 保持不變 */
+#album-area .album-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-copper);
+    line-height: 1.3;
+    margin-bottom: 0.25rem;
+}
+#album-area .album-year {
+    font-size: 0.9rem;
+    color: var(--color-subtle-gray);
+    margin-top: 0;
+    font-weight: 300;
+}
+
+#album-area .albums-note {
+    color: var(--color-subtle-gray);
+    margin-top: 3rem;
+    text-align: center;
+    font-size: 0.95rem;
+    padding: 1rem;
+    border-top: 1px solid var(--color-silver);
+}
+
+@media (min-width: 768px) {
+
+    #album-area .album-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3rem; 
+        row-gap: 4rem; 
+    }
+
+}
+@media (max-width: 767px) {
+
+    #album-area .album-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3rem; 
+        row-gap: 4rem; 
+    }
+    #album-area .section-title {
+        font-size: 1.75rem;
+    }
+}
+
+
+/* Anchor offset only; visual settings above come from the original stylesheet. */
+#home-area,#albums,#message-area{scroll-margin-top:90px}
+body{background-color:#fdf2f8}
+
+/* 首頁間距微調 */
+#home-area .hero{min-height:390px}
+#home-area .hero-content{padding:2rem 2rem}
+#home-area .hero-title{line-height:1.1}
+#home-area .hero-title2{margin:.4rem 0 .3rem;line-height:1.2}
+#home-area .hero-subtitle{margin:0 0 .8rem;line-height:1.35}
+#home-area .music-control-wrapper{margin-top:.6rem}
+#home-area .music-status-text{margin:.25rem 0;line-height:1.35}
+#home-area #fan-spotify-player{margin-top:.5rem!important}
+#home-area #fan-spotify-player + p{margin:.4rem 0 0;line-height:1.35}
+@media(max-width:768px){#home-area .hero-content{padding:1.5rem}#home-area .hero-inner{gap:1.5rem}}
+</style></head><body><header class="header">
+        <div class="header-content">
+            <h1 class="header-brand">Ariana Mini Fan Page</h1>
+            <nav class="nav-wrapper">
+<a href="#home-area" class="nav-link active">About Ariana</a>
+<a href="#albums" class="nav-link">Album Explorer</a>
+<a href="#message-area" class="nav-link">粉絲留言板</a>
+</nav>
+        </div>
+    </header><div class="ambient-glow"></div><div id="home-area"><main class="container">
+
+        <!-- 輪播當背景 -->
+        <section class="hero">
+            <div class="tour-gallery-container-bg">
+                <div class="tour-gallery-strip">
+                    <img src="assets/concert (1).jpg" alt="">
+                    <img src="assets/concert (2).jpg" alt="">
+                    <img src="assets/concert (3).jpg" alt="">
+                    <img src="assets/concert (4).jpg" alt="">
+                </div>
+            </div>
+            <div class="hero-mask"></div>
+
+            <div class="hero-content">
+                <div class="hero-inner">
+                    <div class="hero-text">
+                        <h2 class="hero-title">亞莉安娜·格蘭德</h2>
+                        <p class="hero-title2">Ariana Grande</p>
+                        <p class="hero-subtitle">流行、R&amp;B 與聲音藝術的完美結合</p>
+                        <div>
+                            <a href="#bio" class="hero-button btn-bio">進入人物簡介</a>
+                            <a href="#followher" class="hero-button btn-albums">關注她</a>
+                        </div>
+
+                        <div class="music-control-wrapper">
+                            <p id="music-status" class="music-status-text">
+                                <i class="fas fa-volume-up"></i> Spotify：正在載入 Santa Tell Me…
+                            </p>
+                            <button id="music-toggle" class="music-control-button" aria-label="暫停/播放音樂">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+                            <button id="music-next" class="music-control-button" aria-label="下一首" title="下一首"><i class="fa-solid fa-forward-step"></i></button>
+                        </div>
+                        <div id="fan-spotify-player" style="max-width:420px;margin-top:1rem"><iframe title="Santa Tell Me — Spotify" src="https://open.spotify.com/embed/track/0lizgQ7Qw35od7CYaoMBZb" width="100%" height="152" style="border:0;border-radius:12px" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>
+                        <p style="color:white;font-size:.8rem">Santa Tell Me ⇄ eternal sunshine · 若未播放，請點播放器的播放鍵。</p>
+                    </div>
+                    <div class="hero-image-wrapper">
+                        <img src="assets/ariana_grande.jpg" class="hero-image" alt="Ariana Grande">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 人物簡介 -->
+        <section id="bio" class="page-section">
+            <h3 class="section-title">人物簡介</h3>
+
+            <div class="bio-section-inner">
+                <div class="bio-image-wrapper">
+                    <img src="assets/teenage.jpg" class="bio-image">
+                </div>
+
+                <div class="bio-card">
+                    <h4 class="bio-card-title">Ariana Grande-Butera (A 妹)</h4>
+                    <p>
+                        Ariana Grande 於 1993 年 6 月 26 日出生於佛羅里達州，15 歲時開始在百老匯舞台上嶄露頭角，並以其令人驚嘆的四個八度音域和招牌式的高馬尾造型聞名。
+                    </p>
+                    <p>
+                        她的職業生涯從百老匯和青少年電視劇起步，但很快便憑藉其 R&amp;B 和流行音樂的融合風格征服了全球樂壇。
+                        <br>《滾石》、《告示牌》等權威音樂刊物將她評為史上最偉大的藝人之一，曾於2016年和2019年兩度入圍《時代》的「百大人物」榜單。
+                        標誌性專輯如《Sweetener》和《thank u, next》不僅打破了串流媒體紀錄，更證明了她在當代流行文化中的影響力。
+                    </p>
+                    <p class="highlight">
+                        核心成就：多項葛萊美獎得主、多首冠軍單曲、全球巡演場場爆滿。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main></div><div id="album-area"><section id="albums" class="page-section">
+        <div class="container">
+            <div class="albums-section">
+                <div style="text-align:center; margin-bottom: 3.5rem;">
+                    <h3 class="section-title center">官方專輯 (Album Gallery)</h3>
+                    <p class="section-subtitle">點擊 Spotify 播放器即可收聽完整專輯</p>
+                </div>
+
+                <div class="album-grid">
+                    <!-- 專輯 1: Yours Truly -->
+                    <div class="album-card">
+                        <div class="spotify-iframe-container">
+                            <iframe 
+                                data-testid="embed-iframe" 
+                                style="border-radius:8px" 
+                                src="https://open.spotify.com/embed/album/6czdbbMtGbAkZ6ud2OMTcg?utm_source=generator" 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <h4 class="album-title">Yours Truly</h4>
+                        <p class="album-year">(2013)</p>
+                    </div>
+
+                    <!-- 專輯 2: My Everything -->
+                    <div class="album-card">
+                        <div class="spotify-iframe-container">
+                            <iframe 
+                                data-testid="embed-iframe" 
+                                style="border-radius:8px" 
+                                src="https://open.spotify.com/embed/album/6EVYTRG1drKdO8OnIQBeEj?utm_source=generator" 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy"></iframe>
+                        </div>
+                        <h4 class="album-title">My Everything</h4>
+                        <p class="album-year">(2014)</p>
+                    </div>
+
+                    <!-- 專輯 3: Dangerous Woman -->
+                    <div class="album-card">
+                        <div class="spotify-iframe-container">
+                            <iframe 
+                                data-testid="embed-iframe" 
+                                style="border-radius:8px" 
+                                src="https://open.spotify.com/embed/album/5X7x18kW3mVIvnuNeedM6b?utm_source=generator" 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <h4 class="album-title">Dangerous Woman</h4>
+                        <p class="album-year">(2016)</p>
+                    </div>
+
+                    <!-- 專輯 4: Sweetener -->
+                    <div class="album-card">
+                        <div class="spotify-iframe-container">
+                            <iframe 
+                                style="border-radius:8px" 
+                                src="https://open.spotify.com/embed/album/3tx8gQqWbGwqIGZHqDNrGe?utm_source=generator" 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <h4 class="album-title">Sweetener</h4>
+                        <p class="album-year">(2018)</p>
+                    </div>
+
+                    <!-- 專輯 5: Thank U, Next -->
+                    <div class="album-card">
+                        <div class="spotify-iframe-container">
+                            <iframe 
+                                style="border-radius:8px" 
+                                src="https://open.spotify.com/embed/album/2fYhqwDWXjbpjaIJPEfKFw?utm_source=generator" 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <h4 class="album-title">Thank U, Next</h4>
+                        <p class="album-year">(2019)</p>
+                    </div>
+
+                    <!-- 專輯 6: Positions -->
+                    <div class="album-card">
+                        <div class="spotify-iframe-container">
+                            <iframe 
+                                data-testid="embed-iframe" 
+                                style="border-radius:8px" 
+                                src="https://open.spotify.com/embed/album/74vajFwEwXJ61OW1DKSPEa?utm_source=generator" 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <h4 class="album-title">Positions</h4>
+                        <p class="album-year">(2020)</p>
+                    </div>
+                    
+                    <!-- 專輯 7: Eternal Sunshine -->
+                    <div class="album-card">
+                        <div class="spotify-iframe-container">
+                            <iframe 
+                                style="border-radius:8px" 
+                                src="https://open.spotify.com/embed/album/5EYKrEDnKhhcNxGedaRQeK?utm_source=generator" 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <h4 class="album-title">Eternal Sunshine</h4>
+                        <p class="album-year">(2024)</p>
+                    </div>
+                </div>
+                <p class="albums-note">
+                    * 提示：點擊上方任一 Spotify 播放器，即可在新視窗中打開 Spotify 應用程式或網頁版，享受完整音樂體驗。
+                </p>
+            </div>
+        </div>
+    </section></div><div id="message-area"><section class="message-section">
+        <div class="container">
+            <div class="message-header">
+                <h2 class="message-title">Cloud Messages</h2>
+                <p class="message-subtitle">寫下給 Ariana 的話，讓它們在空中遨遊...</p>
+            </div>
+
+            <div id="message-board-container">
+
+                <button id="toggle-view" title="切換沉浸模式 (隱藏輸入框)">
+                    👁️
+                </button>
+
+                <div id="messages-layer" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none;">
+                    <!-- 留言會產生在這裡 -->
+                </div>
+
+                <!-- 彈出式詳細視窗 -->
+                <div id="msg-modal-overlay">
+                    <div class="msg-modal-content">
+                        <span class="modal-user" id="modal-username">@USER</span>
+                        <div class="modal-text" id="modal-message">Message content goes here...</div>
+                        <button class="close-modal-btn" onclick="closeModal()">Close</button>
+                    </div>
+                </div>
+
+                <div id="control-panel">
+                    <form id="message-form" class="message-form">
+                        <input type="text" id="input-name" name="username" placeholder="你的名字 (Name)" class="custom-input" maxlength="15" required style="font-weight: bold; flex: 1;">
+                        <input type="text" id="input-msg" name="message" placeholder="想對 Ariana 說的話... (Say something sweet)" class="custom-input" maxlength="60" autocomplete="off" required style="flex: 3;">
+                        <button type="submit" id="btn-send" class="btn-send">
+                            SEND ✨
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <p class="mt-8 text-center" style="color: #9ca3af; font-size: 0.875rem;">
+                Tip: 點擊留言氣泡可以查看完整內容。
+            </p>
+        </div>
+    </section></div><div id="footer-area"><footer class="footer">
+        <div id="followher" class="footer-title">追蹤 AG 的音樂世界</div>
+
+        <div class="social-icons">
+            <a href="https://www.instagram.com/arianagrande/" target="_blank" aria-label="Ariana Grande Instagram" class="social-link">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://www.facebook.com/arianagrande/?locale=zh_TW" target="_blank" aria-label="Ariana Grande Facebook" class="social-link">
+                <i class="fab fa-facebook"></i>
+            </a>
+            <a href="https://x.com/ariansqrande" target="_blank" aria-label="Ariana Grande X/Twitter" class="social-link">
+                <i class="fab fa-x-twitter"></i>
+            </a>
+            <a href="https://www.youtube.com/channel/UC9CoOnJkIBMdeijd9qYoT_g" target="_blank" aria-label="Ariana Grande YouTube" class="social-link">
+                <i class="fab fa-youtube"></i>
+            </a>
+        </div>
+
+        <p class="footer-text">
+            &copy; 2026 LC練習專案
+        </p>
+    </footer></div><script>
+(()=>{
+        // 導覽列隱藏邏輯
+        const header = document.querySelector('.header');
+        let lastScrollY = 0;
+
+        function handleScroll() {
+            const currentScrollY = window.scrollY;
+            const scrollThreshold = 100;
+
+            if (currentScrollY > lastScrollY && currentScrollY > scrollThreshold) {
+                header.classList.add('header-hidden');
+            } else if (currentScrollY < lastScrollY || currentScrollY < scrollThreshold) {
+                header.classList.remove('header-hidden');
+            }
+            lastScrollY = currentScrollY;
+        }
+        window.addEventListener('scroll', handleScroll);
+
+})();
+(()=>{        const initialMessages = [
+            { name: "Arianator_TW", text: "永遠愛妳！Eternal Sunshine! ☀️" },
+            { name: "SweetenerFan", text: "Waiting for AG7! 🎵" },
+            { name: "Moonlight", text: "妳是我的月光 🌙" },
+            { name: "Toulouse", text: "Woof woof! 🐶" },
+            { name: "Glinda", text: "Popular! 💖" },
+            { name: "DangerousWoman", text: "I'm livin' for it." },
+            { name: "Positions", text: "為妳切換角度" },
+            { name: "7Rings", text: "I want it, I got it. 💍" }
+        ];
+
+        const container = document.getElementById('message-board-container');
+        const messagesLayer = document.getElementById('messages-layer');
+        const toggleViewBtn = document.getElementById('toggle-view');
+        const controlPanel = document.getElementById('control-panel');
+        
+        const modalOverlay = document.getElementById('msg-modal-overlay');
+        const modalUsername = document.getElementById('modal-username');
+        const modalMessage = document.getElementById('modal-message');
+
+        let messageElements = [];
+
+        function random(min, max) { return Math.random() * (max - min) + min; }
+
+        function createMessageElement(name, text) {
+            const el = document.createElement('div');
+            el.classList.add('floating-message');
+            el.style.pointerEvents = "auto"; 
+
+            const user = document.createElement('span');
+            user.className = 'user-name'; user.textContent = '@' + name;
+            const content = document.createElement('span');
+            content.className = 'msg-content'; content.textContent = text;
+            el.append(user, content);
+
+            const startX = random(50, container.offsetWidth - 200);
+            const startY = random(50, container.offsetHeight - 100);
+            const speedX = random(-0.5, 0.5);
+            const speedY = random(-0.5, 0.5);
+            
+            el.dataset.x = startX;
+            el.dataset.y = startY;
+            el.dataset.speedX = speedX === 0 ? 0.2 : speedX; 
+            el.dataset.speedY = speedY === 0 ? 0.2 : speedY;
+            el.dataset.hovered = "false";
+
+            el.style.transform = `translate(${startX}px, ${startY}px)`;
+
+            el.addEventListener('mouseenter', () => el.dataset.hovered = "true");
+            el.addEventListener('mouseleave', () => el.dataset.hovered = "false");
+            el.addEventListener('click', () => openModal(name, text));
+
+            messagesLayer.appendChild(el);
+            messageElements.push(el);
+        }
+
+        initialMessages.forEach(msg => createMessageElement(msg.name, msg.text));
+
+        function animate() {
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+
+            messageElements.forEach(el => {
+                if (el.dataset.hovered === "true" || modalOverlay.classList.contains('active')) return;
+
+                let x = parseFloat(el.dataset.x);
+                let y = parseFloat(el.dataset.y);
+                let speedX = parseFloat(el.dataset.speedX);
+                let speedY = parseFloat(el.dataset.speedY);
+
+                x += speedX;
+                y += speedY;
+
+                const elWidth = el.offsetWidth;
+                const elHeight = el.offsetHeight;
+
+                if (x <= 0 || x + elWidth >= containerWidth) {
+                    speedX *= -1;
+                    x = x <= 0 ? 0 : containerWidth - elWidth;
+                }
+                
+                if (y <= 0 || y + elHeight >= containerHeight) {
+                    speedY *= -1;
+                    y = y <= 0 ? 0 : containerHeight - elHeight;
+                }
+
+                el.dataset.x = x;
+                el.dataset.y = y;
+                el.dataset.speedX = speedX;
+                el.dataset.speedY = speedY;
+
+                el.style.transform = `translate(${x}px, ${y}px)`;
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        document.getElementById("message-form").addEventListener("submit", handleFormSubmit);
+
+        function handleFormSubmit(event) {
+            event.preventDefault(); 
+            const form = event.target;
+            const nameInput = form.querySelector('input[name="username"]');
+            const msgInput = form.querySelector('input[name="message"]');
+            const btnSend = form.querySelector('button[type="submit"]');
+
+            const name = nameInput.value.trim();
+            const text = msgInput.value.trim();
+
+            if (!name || !text) return;
+
+            createMessageElement(name, text);
+            msgInput.value = "";
+            
+            const originalBtnText = btnSend.innerHTML;
+            btnSend.innerHTML = "SENT! 🚀";
+            btnSend.style.background = "linear-gradient(45deg, #10b981, #3b82f6)"; 
+            
+            setTimeout(() => {
+                btnSend.innerHTML = originalBtnText;
+                btnSend.style.background = ""; 
+            }, 1500);
+        }
+
+        function openModal(name, text) {
+            modalUsername.textContent = "@" + name;
+            modalMessage.textContent = text;
+            modalOverlay.classList.add('active'); 
+        }
+
+        window.closeModal = function() {
+            modalOverlay.classList.remove('active'); 
+        }
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        toggleViewBtn.addEventListener('click', () => {
+            controlPanel.classList.toggle('hidden-panel');
+            if (controlPanel.classList.contains('hidden-panel')) {
+                toggleViewBtn.style.opacity = "0.5";
+            } else {
+                toggleViewBtn.style.opacity = "1";
+            }
+        });
+    })();
+
+const navLinks = document.querySelectorAll('.nav-link');
+function updateNav(){let current='#home-area';for(const id of ['home-area','albums','message-area']){if(document.getElementById(id).getBoundingClientRect().top<=150)current='#'+id;}navLinks.forEach(link=>link.classList.toggle('active',link.hash===current));}
+window.addEventListener('scroll',updateNav,{passive:true});updateNav();
+
+(() => {
+ const tracks=[{name:'Santa Tell Me',id:'0lizgQ7Qw35od7CYaoMBZb'},{name:'eternal sunshine',id:'0ZE7YRwdYqM8CtmfExYGDk'}];
+ const status=document.getElementById('music-status'), button=document.getElementById('music-toggle'),next=document.getElementById('music-next'),host=document.getElementById('fan-spotify-player');
+ let controller=null,index=0,playing=false,pendingPlay=true,started=false,changing=false;
+ const uri=()=> 'spotify:track:'+tracks[index].id;
+ function update(){button.innerHTML=playing?'<i class="fa-solid fa-pause"></i>':'<i class="fa-solid fa-play"></i>';button.setAttribute('aria-label',playing?'暫停音樂':'播放音樂');status.textContent=(playing?'正在播放：':'目前歌曲：')+tracks[index].name;}
+ function fallback(){host.innerHTML='';const iframe=document.createElement('iframe');iframe.src='https://open.spotify.com/embed/track/'+tracks[index].id;iframe.title=tracks[index].name+' — Spotify';iframe.width='100%';iframe.height='152';iframe.style.cssText='border:0;border-radius:12px';iframe.allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';host.appendChild(iframe);status.textContent=tracks[index].name+'：請點 Spotify 播放器中的播放鍵。';}
+ function requestPlay(){if(!controller){fallback();return;}try{controller.play();}catch(error){status.textContent='請點 Spotify 播放器中的播放鍵。';}}
+ function switchTrack(){index=(index+1)%tracks.length;playing=false;started=false;changing=true;pendingPlay=true;update();if(controller){controller.pause();controller.loadEntity(uri());}else{fallback();}}
+ next.addEventListener('click',switchTrack);
+ button.addEventListener('click',()=>{if(!controller){fallback();return;}if(playing){pendingPlay=false;controller.pause();}else{pendingPlay=true;requestPlay();}});
+ window.onSpotifyIframeApiReady=api=>{
+  host.innerHTML='';api.createController(host,{uri:uri(),width:'100%',height:152},c=>{
+   controller=c;
+   c.addListener('ready',()=>{changing=false;update();if(pendingPlay)requestPlay();});
+   c.addListener('playback_started',event=>{if(event.data.playingURI&&event.data.playingURI!==uri())return;started=true;changing=false;playing=true;update();});
+   c.addListener('playback_update',event=>{
+    const d=event.data;if(d.playingURI&&d.playingURI!==uri())return;
+    playing=!d.isPaused&&!d.isBuffering;update();
+    if(!changing&&started&&d.isPaused&&!d.isBuffering&&d.duration>0&&d.position>=d.duration-100){started=false;switchTrack();}
+   });
+  });
+ };
+ const script=document.createElement('script');script.src='https://open.spotify.com/embed/iframe-api/v1';script.onerror=()=>{status.textContent='Spotify 載入失敗，可使用下方播放器或稍後重新整理。';};document.head.appendChild(script);
+ update();
+})();
+</script></body></html>
